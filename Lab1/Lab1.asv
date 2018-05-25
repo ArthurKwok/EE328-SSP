@@ -1,0 +1,43 @@
+% Record your voice for 2 seconds.
+recObj = audiorecorder;
+disp('Start speaking.')
+recordblocking(recObj, 2);
+disp('End of Recording.');
+
+aa = getaudiodata(recObj);%save audio file(take 3 times for a, i, u)
+audiowrite('aa.wav', aa, 8000);%write audio file into system(take 3 times)
+
+aa = audioread('aa.wav');
+[aa_spec, w] = DTFT(aa, length(aa));
+plot(w*8000/(2*pi), 10*log(abs(aa_spec)));title('spectrum of vowel /a:/ (dB)');axis([0 4000 -10 80]);
+
+ii = audioread('aa.wav');
+[ii_spec, w] = DTFT(ii, length(ii));
+plot(w*8000/(2*pi), 10*log(abs(ii_spec)));title('spectrum of vowel /i/ (dB)');axis([0 4000 -10 80]);
+
+u = audioread('u.wav');
+[u_spec, w] = DTFT(u, length(u));
+plot(w*8000/(2*pi), 10*log(abs(u_spec)));title('spectrum of vowel /u/ (dB)');axis([0 4000 -10 80]);
+
+
+[YUPPER,YLOWER] = envelope(abs(u_spec),50,'peak');% take the envelope
+w = w*8000/(2*pi);
+plot(w, 10*log(abs(YUPPER)));title('envelope of spectrum of vowel /u/ (dB)');axis([0 4000 -10 80]);
+
+
+frequency = 50:50:4000;
+t = 1:16000;
+frequency_YUPPER = round(length(w)/8000*frequency+(length(w)/2));
+YUPPER = abs(YUPPER);
+u_synth = cos(2*pi*frequency(1)/8000*t) * YUPPER(frequency_YUPPER(1));
+for i = 2:length(frequency)
+    u_synth = u_synth + cos(2*pi*frequency(i)/8000*t) * YUPPER(frequency_YUPPER(i));
+end
+
+m = max(u_synth);
+u_synth = u_synth/m;
+[u_syn_spe, w] = DTFT(u_synth, length(u_synth));
+figure;
+plot(w*8000/(2*pi), 10*log(abs(u_syn_spe)));title('spectrum of vowel /i/ (dB)');axis([0 4000 -10 80]);
+soundsc(u_synth);
+
